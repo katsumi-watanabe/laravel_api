@@ -1,0 +1,47 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <table id="tb">
+    </table>
+</body>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+$(document).ready(function(){$.ajax({
+    url: 'http://127.0.0.1:8000/api/article?category=1',
+    type: 'GET',
+    dataType: 'json',
+    success: function(d){
+        // テーブルをHTMLに挿入
+        $('#tb').html(d.table);
+
+        // aタグのhref属性を書き換え
+        $('#tb a').each(function() {
+            var apiData = $(this).attr('api-data'); // api-data属性の値を取得
+            var currentDomain = window.location.origin; // 現在のドメインを取得
+            var encodedApiData = encodeURIComponent(apiData); // api-dataのエンコード
+            var newUrl = currentDomain + '/article/detail.html?api=' + encodedApiData;
+            $(this).attr('href', newUrl);
+        });
+
+    }
+});});
+</script>
+<style>
+table,
+td {
+    border: 1px solid #333;
+}
+
+thead,
+tfoot {
+    background-color: red;
+    color: #fff;
+}
+
+</style>
+</html>

@@ -1,0 +1,30 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Document</title>
+</head>
+<body>
+    <p>お知らせ詳細</p>
+    <div id="article_detail">
+    </div>
+</body>
+
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
+<script>
+// URLからパラメータを取得
+var urlParams = new URLSearchParams(window.location.search);
+// "api"という名前のパラメータを取得
+var apiParam = urlParams.get('api');
+// コンソールに出力（デバッグ用）
+console.log('API Parameter:', apiParam);
+$(document).ready(function(){$.ajax({
+    url: 'http://127.0.0.1:8000/api/article/detail?' + urlParams,
+    type: 'GET',
+    dataType: 'json',
+    success: function(d){$('#article_detail').html(d.detail);},
+});});
+</script>
+
+</html>
