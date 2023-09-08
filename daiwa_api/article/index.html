@@ -9,54 +9,85 @@
     <h1>お知らせ一覧：APIから取得</h1>
     <h2 id="categoryName"></h2>
     <table id="tb">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>タイトル</th>
+                <th>詳細</th>
+            </tr>
+        </thead>
+        <tbody class="brand_lists">
+            <tr data-name="template">
+                <td data-name="id"></td>
+                <td data-name="title"><a href=""></a></td>
+                <td data-name="detail"></td>
+            </tr>
+        </tbody>
     </table>
+
+    <!-- 関連記事 -->
+    <h2>近くのお店のお知らせ</h2>
+    <table>
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>タイトル</th>
+                <th>詳細</th>
+            </tr>
+        </thead>
+        <tbody class="other_brand_list">
+            <tr data-name="template">
+                <td data-name="id"></td>
+                <td data-name="title"><a href=""></a></td>
+                <td data-name="detail"></td>
+            </tr>
+        </tbody>
+    </table>
+
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
-$(document).ready(function() {
-    var domainUrl = 'http://127.0.0.1:8000';
-    // category箇所で店舗を選択する
-    var article_url = domainUrl + '/api/article?category=1';
+function renderArticles($target, brand_id) {
+    var domainUrl = 'https://php.alpha-create.ne.jp/p81/daiwa.prototype/public';
+    var article_url = domainUrl + '/api/article?category=' + brand_id;
+
     $.ajax({
         url: article_url,
         type: 'GET',
         dataType: 'json',
         success: function(d) {
-            // 既存のテーブルを取得
-            var table = $('#tb');
-
-            // カテゴリ名を更新（APIレスポンスに依存）
-            if (d.category_name) {
-                $('#categoryName').text(d.category_name);
+            if (d.category) {
+                $('#categoryName').text(d.category);
             }
 
-            // ヘッダーを作成
-            var header = $('<thead></thead>').addClass('header');
-            var headerRow = $('<tr></tr>');
-            headerRow.append('<th>ID</th>');
-            headerRow.append('<th>タイトル</th>');
-            headerRow.append('<th>詳細</th>');
-            header.append(headerRow);
-            table.append(header);
+            // テンプレート行を取得
+            var templateRow = $target.find('[data-name="template"]').clone();
 
-            // ボディ部分を作成
-            var tbody = $('<tbody></tbody>').addClass('body');
-            $.each(d.articles, function(i, article) {
-                var row = $('<tr></tr>');
-                var detailUrl = './detail.html?article='+article.id;
+            // 既存のテーブル行を削除
+            $target.empty();
 
-                row.append('<td><a href="' + detailUrl + '">' + article.id + '</a></td>');
-                row.append('<td><a href="' + detailUrl + '">' + article.title + '</a></td>');
-                row.append('<td><a href="' + detailUrl + '">' + article.detail + '</a></td>');
+            // APIから取得したデータを使って新しい行を生成
+            d.articles.forEach(article => {
+                var newRow = templateRow.clone();
+                newRow.find('[data-name="id"]').text(article.id);
+                newRow.find('[data-name="title"] a').text(article.title);
+                newRow.find('[data-name="title"] a').attr('href', './detail.html?article=' + article.id);
+                newRow.find('[data-name="detail"]').html(article.detail);
 
-                tbody.append(row);
+                // 新しい行をテーブルに追加
+                $target.append(newRow);
             });
-            table.append(tbody);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.log('Error:', textStatus, errorThrown);
         }
     });
+}
+
+$(document).ready(function() {
+    // brand_id は適宜設定
+    renderArticles($('tbody.brand_lists'), 1);
+    renderArticles($('tbody.other_brand_list'), 2);
 });
 </script>
 <style>
@@ -65,9 +96,13 @@ td {
     border: 1px solid #333;
 }
 
+img {
+    width: 200px;
+}
+
 thead,
 tfoot {
-    background-color: red;
+    background-color: blue;
     color: #fff;
 }
 

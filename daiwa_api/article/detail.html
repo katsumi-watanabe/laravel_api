@@ -9,62 +9,66 @@
     <h1>お知らせ詳細：APIから取得</h1>
     <h2 id="categoryName"></h2>
     <table id="tb">
+        <thead>
+            <tr>
+                <th>ID</th>
+                <th>タイトル</th>
+                <th>画像</th>
+                <th>詳細</th>
+            </tr>
+        </thead>
+        <tbody class="article_detail">
+            <tr data-name="template">
+                <td data-name="id"></td>
+                <td data-name="title"></td>
+                <td data-name="image"><img src="" alt=""></td>
+                <td data-name="detail"></td>
+            </tr>
+        </tbody>
     </table>
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
-$(document).ready(function() {
-    // URLからパラメータを取得
-    var urlParams = new URLSearchParams(window.location.search);
-    // "api"という名前のパラメータを取得（apiParamには記事のIDが入る）
-    var apiParam = urlParams.get('article');
-    var domainUrl = 'http://127.0.0.1:8000';
-    var detail_path = domainUrl + '/api/article/detail/';
+function renderArticleDetail($target, articleID) {
+    var domainUrl = 'https://php.alpha-create.ne.jp/p81/daiwa.prototype/public';
+    var detail_url = domainUrl + '/api/article/detail/' + articleID;
     var storage_path = domainUrl + '/storage/';
 
     $.ajax({
-        url: detail_path + apiParam,
+        url: detail_url,
         type: 'GET',
         dataType: 'json',
         success: function(d) {
-            // 既存のテーブルを取得
-            var table = $('#tb');
-
-            // カテゴリ名を更新（APIレスポンスに依存）
             if (d.category) {
                 $('#categoryName').text(d.category);
             }
 
-            // ヘッダーを作成
-            var header = $('<thead></thead>').addClass('header');
-            var headerRow = $('<tr></tr>');
-            headerRow.append('<th>ID</th>');
-            headerRow.append('<th>タイトル</th>');
-            headerRow.append('<th>画像</th>');
-            headerRow.append('<th>詳細</th>');
-            header.append(headerRow);
-            table.append(header);
+            var templateRow = $target.find('[data-name="template"]').clone();
 
-            // ボディ部分を作成（単一の記事なので$.eachは不要）
-            var tbody = $('<tbody></tbody>').addClass('body');
-            var article = d.article;  // APIの応答から該当の記事データを取得
-            var row = $('<tr></tr>');
+            $target.empty();
 
-            row.append('<td>' + article.id + '</td>');
-            row.append('<td>' + article.title + '</td>');
-            row.append('<td><img src=' + storage_path + article.image + '></td>');
-            row.append('<td>' + article.detail + '</td>');
+            var article = d.article;
+            var newRow = templateRow.clone();
+            newRow.find('[data-name="id"]').text(article.id);
+            newRow.find('[data-name="title"]').text(article.title);
+            newRow.find('[data-name="image"] img').attr('src', storage_path + article.image);
+            newRow.find('[data-name="detail"]').html(article.detail);
 
-            tbody.append(row);
-            table.append(tbody);
+            $target.append(newRow);
         },
         error: function(jqXHR, textStatus, errorThrown) {
             console.log('Error:', textStatus, errorThrown);
         }
     });
+}
+
+$(document).ready(function() {
+    var urlParams = new URLSearchParams(window.location.search);
+    var articleID = urlParams.get('article');
+
+    renderArticleDetail($('tbody.article_detail'), articleID);
 });
 </script>
-
 <style>
 table,
 td {
@@ -80,6 +84,5 @@ tfoot {
     background-color: blue;
     color: #fff;
 }
-
 </style>
 </html>
