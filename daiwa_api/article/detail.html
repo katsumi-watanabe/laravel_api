@@ -1,30 +1,85 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
 <body>
-    <p>お知らせ詳細</p>
-    <div id="article_detail">
-    </div>
+    <h1>お知らせ詳細：APIから取得</h1>
+    <h2 id="categoryName"></h2>
+    <table id="tb">
+    </table>
 </body>
-
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
-// URLからパラメータを取得
-var urlParams = new URLSearchParams(window.location.search);
-// "api"という名前のパラメータを取得
-var apiParam = urlParams.get('api');
-// コンソールに出力（デバッグ用）
-console.log('API Parameter:', apiParam);
-$(document).ready(function(){$.ajax({
-    url: 'http://127.0.0.1:8000/api/article/detail?' + urlParams,
-    type: 'GET',
-    dataType: 'json',
-    success: function(d){$('#article_detail').html(d.detail);},
-});});
+$(document).ready(function() {
+    // URLからパラメータを取得
+    var urlParams = new URLSearchParams(window.location.search);
+    // "api"という名前のパラメータを取得（apiParamには記事のIDが入る）
+    var apiParam = urlParams.get('article');
+    var domainUrl = 'http://127.0.0.1:8000';
+    var detail_path = domainUrl + '/api/article/detail/';
+    var storage_path = domainUrl + '/storage/';
+
+    $.ajax({
+        url: detail_path + apiParam,
+        type: 'GET',
+        dataType: 'json',
+        success: function(d) {
+            // 既存のテーブルを取得
+            var table = $('#tb');
+
+            // カテゴリ名を更新（APIレスポンスに依存）
+            if (d.category) {
+                $('#categoryName').text(d.category);
+            }
+
+            // ヘッダーを作成
+            var header = $('<thead></thead>').addClass('header');
+            var headerRow = $('<tr></tr>');
+            headerRow.append('<th>ID</th>');
+            headerRow.append('<th>タイトル</th>');
+            headerRow.append('<th>画像</th>');
+            headerRow.append('<th>詳細</th>');
+            header.append(headerRow);
+            table.append(header);
+
+            // ボディ部分を作成（単一の記事なので$.eachは不要）
+            var tbody = $('<tbody></tbody>').addClass('body');
+            var article = d.article;  // APIの応答から該当の記事データを取得
+            var row = $('<tr></tr>');
+
+            row.append('<td>' + article.id + '</td>');
+            row.append('<td>' + article.title + '</td>');
+            row.append('<td><img src=' + storage_path + article.image + '></td>');
+            row.append('<td>' + article.detail + '</td>');
+
+            tbody.append(row);
+            table.append(tbody);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log('Error:', textStatus, errorThrown);
+        }
+    });
+});
 </script>
 
+<style>
+table,
+td {
+    border: 1px solid #333;
+}
+
+img {
+    width: 200px;
+}
+
+thead,
+tfoot {
+    background-color: blue;
+    color: #fff;
+}
+
+</style>
 </html>

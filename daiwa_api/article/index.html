@@ -1,35 +1,63 @@
 <!DOCTYPE html>
-<html lang="en">
+<html lang="ja">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Document</title>
 </head>
 <body>
+    <h1>お知らせ一覧：APIから取得</h1>
+    <h2 id="categoryName"></h2>
     <table id="tb">
     </table>
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
-$(document).ready(function(){$.ajax({
-    url: 'http://127.0.0.1:8000/api/article?category=1',
-    type: 'GET',
-    dataType: 'json',
-    success: function(d){
-        // テーブルをHTMLに挿入
-        $('#tb').html(d.table);
+$(document).ready(function() {
+    var domainUrl = 'http://127.0.0.1:8000';
+    // category箇所で店舗を選択する
+    var article_url = domainUrl + '/api/article?category=1';
+    $.ajax({
+        url: article_url,
+        type: 'GET',
+        dataType: 'json',
+        success: function(d) {
+            // 既存のテーブルを取得
+            var table = $('#tb');
 
-        // aタグのhref属性を書き換え
-        $('#tb a').each(function() {
-            var apiData = $(this).attr('api-data'); // api-data属性の値を取得
-            var currentDomain = window.location.origin; // 現在のドメインを取得
-            var encodedApiData = encodeURIComponent(apiData); // api-dataのエンコード
-            var newUrl = currentDomain + '/article/detail.html?api=' + encodedApiData;
-            $(this).attr('href', newUrl);
-        });
+            // カテゴリ名を更新（APIレスポンスに依存）
+            if (d.category_name) {
+                $('#categoryName').text(d.category_name);
+            }
 
-    }
-});});
+            // ヘッダーを作成
+            var header = $('<thead></thead>').addClass('header');
+            var headerRow = $('<tr></tr>');
+            headerRow.append('<th>ID</th>');
+            headerRow.append('<th>タイトル</th>');
+            headerRow.append('<th>詳細</th>');
+            header.append(headerRow);
+            table.append(header);
+
+            // ボディ部分を作成
+            var tbody = $('<tbody></tbody>').addClass('body');
+            $.each(d.articles, function(i, article) {
+                var row = $('<tr></tr>');
+                var detailUrl = './detail.html?article='+article.id;
+
+                row.append('<td><a href="' + detailUrl + '">' + article.id + '</a></td>');
+                row.append('<td><a href="' + detailUrl + '">' + article.title + '</a></td>');
+                row.append('<td><a href="' + detailUrl + '">' + article.detail + '</a></td>');
+
+                tbody.append(row);
+            });
+            table.append(tbody);
+        },
+        error: function(jqXHR, textStatus, errorThrown) {
+            console.log('Error:', textStatus, errorThrown);
+        }
+    });
+});
 </script>
 <style>
 table,
