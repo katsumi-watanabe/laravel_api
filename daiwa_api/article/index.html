@@ -7,7 +7,7 @@
 </head>
 <body>
     <h1>お知らせ一覧：APIから取得</h1>
-    <h2 id="categoryName"></h2>
+    <h2 id="categoryName-1"></h2>
     <table id="tb">
         <thead>
             <tr>
@@ -18,15 +18,16 @@
         </thead>
         <tbody class="brand_lists">
             <tr data-name="template">
-                <td data-name="id"></td>
-                <td data-name="title"><a href=""></a></td>
-                <td data-name="detail"></td>
+                <td data-option="id" data-method="text"></td>
+                <td><a data-option="title" data-method="text" data-attribute="./detail.html?article=" href=""></a></td>
+                <td data-option="detail" data-method="html"></td>
             </tr>
         </tbody>
     </table>
 
     <!-- 関連記事 -->
     <h2>近くのお店のお知らせ</h2>
+    <h2 id="categoryName-2"></h2>
     <table>
         <thead>
             <tr>
@@ -37,9 +38,9 @@
         </thead>
         <tbody class="other_brand_list">
             <tr data-name="template">
-                <td data-name="id"></td>
-                <td data-name="title"><a href=""></a></td>
-                <td data-name="detail"></td>
+                <td data-option="id" data-method="text"></td>
+                <td><a href="" data-option="title" data-method="text" data-attribute="./detail.html?article="></a></td>
+                <td data-option="detail" data-method="html"></td>
             </tr>
         </tbody>
     </table>
@@ -47,35 +48,35 @@
 </body>
 <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.5.1/jquery.min.js"></script>
 <script>
-function renderArticles($target, brand_id) {
+function renderArticles($target, brandId) {
+    // ドメインに合わせて変更する
     var domainUrl = 'https://php.alpha-create.ne.jp/p81/daiwa.prototype/public';
-    var article_url = domainUrl + '/api/article?category=' + brand_id;
+    var articlesApiUrl = `${domainUrl}/api/article?category=${brandId}`;
 
     $.ajax({
-        url: article_url,
+        url: articlesApiUrl,
         type: 'GET',
         dataType: 'json',
-        success: function(d) {
-            if (d.category) {
-                $('#categoryName').text(d.category);
-            }
+        success: function(data) {
+            // カテゴリー名
+            data.category ? $('#categoryName-' + brandId).text(data.category) : '';
 
-            // テンプレート行を取得
-            var templateRow = $target.find('[data-name="template"]').clone();
-
-            // 既存のテーブル行を削除
+            var $templateRow = $target.find('[data-name="template"]').clone();
             $target.empty();
 
-            // APIから取得したデータを使って新しい行を生成
-            d.articles.forEach(article => {
-                var newRow = templateRow.clone();
-                newRow.find('[data-name="id"]').text(article.id);
-                newRow.find('[data-name="title"] a').text(article.title);
-                newRow.find('[data-name="title"] a').attr('href', './detail.html?article=' + article.id);
-                newRow.find('[data-name="detail"]').html(article.detail);
+            data.articles.forEach(article => {
+                var $newRow = $templateRow.clone();
+                $newRow.find('[data-option]').each(function() {
+                    var option = $(this).data('option');
+                    var method = $(this).data('method');
+                    var attribute = $(this).data('attribute');
 
-                // 新しい行をテーブルに追加
-                $target.append(newRow);
+                    // attributeがあればリンク作成
+                    attribute ? $(this).attr('href', attribute + article.id) : '';
+
+                    $(this)[method](article[option]);
+                });
+                $target.append($newRow);
             });
         },
         error: function(jqXHR, textStatus, errorThrown) {
@@ -85,7 +86,6 @@ function renderArticles($target, brand_id) {
 }
 
 $(document).ready(function() {
-    // brand_id は適宜設定
     renderArticles($('tbody.brand_lists'), 1);
     renderArticles($('tbody.other_brand_list'), 2);
 });

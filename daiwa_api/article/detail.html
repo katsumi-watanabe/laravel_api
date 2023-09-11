@@ -19,10 +19,10 @@
         </thead>
         <tbody class="article_detail">
             <tr data-name="template">
-                <td data-name="id"></td>
-                <td data-name="title"></td>
-                <td data-name="image"><img src="" alt=""></td>
-                <td data-name="detail"></td>
+                <td data-option="id" data-method="text"></td>
+                <td data-option="title" data-method="text"></td>
+                <td><img src="" alt="" data-option="image" data-method="image"></td>
+                <td data-option="detail" data-method="html"></td>
             </tr>
         </tbody>
     </table>
@@ -49,10 +49,22 @@ function renderArticleDetail($target, articleID) {
 
             var article = d.article;
             var newRow = templateRow.clone();
-            newRow.find('[data-name="id"]').text(article.id);
-            newRow.find('[data-name="title"]').text(article.title);
-            newRow.find('[data-name="image"] img').attr('src', storage_path + article.image);
-            newRow.find('[data-name="detail"]').html(article.detail);
+
+            newRow.find('[data-option]').each(function() {
+                var option = $(this).data('option');
+                var method = $(this).data('method');
+                var attribute = $(this).data('attribute');
+
+                // attributeがあればリンク作成
+                attribute ? $(this).attr('href', attribute + article.id) : '';
+                // 'image'または'pdf'の場合に特別な処理を行う
+                if (method === 'image' || method === 'pdf') {
+                    var combinedUrl = storage_path + article[option];
+                    $(this).attr('src', combinedUrl);
+                } else {
+                    $(this)[method](article[option]);
+                }
+            });
 
             $target.append(newRow);
         },
@@ -69,6 +81,7 @@ $(document).ready(function() {
     renderArticleDetail($('tbody.article_detail'), articleID);
 });
 </script>
+
 <style>
 table,
 td {
